@@ -1,0 +1,5 @@
+{
+    "SQLALCHEMY_DATABASE_URI": "postgresql://cms:cms@172.17.0.2/cms",
+    "SQLALCHEMY_TRACK_MODIFICATIONS": false,
+    "USER_MIGRATION": true
+}
