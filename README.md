@@ -15,7 +15,9 @@ Starting docker postgres
 
 ```
 docker run --name cms-wrapper-postgres \
-    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_USER=cms \
+    -e POSTGRES_PASSWORD=cms \
+    -e POSTGRES_DB=cms \
     -p 5432:5432 \
     -v $(pwd)/data/postgres:/var/lib/postgresql/data \
     -d postgres:14.2
