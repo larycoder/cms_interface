@@ -24,7 +24,7 @@ def init_app():
     app.config.update(**config)
     app.config["CURRENT_DB"] = SQLAlchemy(app)
     app.config["CURRENT_KEY"] = u_util.b64_to_byte(app.config["SECRET_KEY"])
-    app.register_blueprint(load_blueprint())
+    app.register_blueprint(load_blueprint(), prefix="/api")
     print("Done")
     return app
 
@@ -35,11 +35,11 @@ def migrate(db):
     """
     from model.auth import AuthModel
 
-    u_util.execute(
-        db.engine.execute, "Test database connection...", "SELECT 1")
+    u_util.execute(db.engine.execute, "Test database connection...",
+                   "SELECT 1")
 
-    u_util.execute(
-        db.create_all, "Migrating data to database...")
+    u_util.execute(db.create_all, "Migrating data to database...")
+
 
 # Driver
 if __name__ == "__main__":

@@ -5,9 +5,13 @@ from flask_restx import Api
 
 
 def load_blueprint():
-    from resource.auth import AuthResource
+    from resource.auth import LoginResource
+    from resource.auth import RegisterResource
 
     bp = Blueprint("api", __name__)
-    api = Api(bp, prefix="/api")
-    api.add_resource(AuthResource, "/auth")
+    api = Api(bp, prefix="/auth")
+
+    api.add_resource(RegisterResource, "/register")
+    api.add_resource(LoginResource, "/login")
+
     return bp
