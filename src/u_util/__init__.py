@@ -20,6 +20,18 @@ def byte_to_b64(cipher: bytes) -> str:
 def encode_jwt_token(payload: dict, key: bytes) -> str:
     """ encrypt payload to jwt token """
     import jwt
+    import datetime
+    from model.app import App
+
+    app = App.get_instance()
+    valid_time = datetime.timedelta(
+        days=0, minutes= app.config["JWT_MINUTE_TIME"])
+
+    payload = {
+        'exp': datetime.datetime.utcnow() + valid_time,
+        'iat': datetime.datetime.utcnow(),
+        'sub': payload
+    }
     return jwt.encode(payload, key, algorithm="HS256")
 
 
@@ -28,7 +40,7 @@ def decode_jwt_token(token: str, key: bytes) -> dict:
     import jwt
     try:
         payload = jwt.decode(token, key)
-        return payload
+        return payload['sub']
     except jwt.ExpiredSignatureError:
         return {}
     except jwt.InvalidTokenError:
@@ -37,7 +49,7 @@ def decode_jwt_token(token: str, key: bytes) -> dict:
 
 def hash_pwd(pwd: str) -> str:
     """ hash user password with 16 rounds salt
-        Output is hashed bytes encoded using base 64
+    Output is hashed bytes encoded using base 64
     """
     import bcrypt
     salt = bcrypt.gensalt(rounds=16)
