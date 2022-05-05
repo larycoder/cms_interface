@@ -1,20 +1,26 @@
-from flask_restx import reqparse
-from . import BaseResource
+from flask_restx import Namespace, reqparse
+
 from model.auth import AuthModel
 from model.response import Response
 import u_util
 
+from . import BaseResource
 
+ns = Namespace(name="auth")
+
+
+@ns.route("/register")
 class RegisterResource(BaseResource):
-    """ Registration API """
+    """Registration API"""
 
+    post_parser = reqparse.RequestParser()
+    post_parser.add_argument("username", type=str, location="json")
+    post_parser.add_argument("password", type=str, location="json")
+
+    @ns.expect(post_parser)
     def post(self):
-        """ New user registration """
-        parser = reqparse.RequestParser()
-        parser.add_argument("username")
-        parser.add_argument("password")
-        args = parser.parse_args()
-
+        """New user registration"""
+        args = RegisterResource.post_parser.parse_args()
         user = AuthModel.query.filter_by(username=args["username"]).first()
         if user is not None:
             return self.build_resp(Response(400, "username is already existed"))
@@ -32,11 +38,17 @@ class RegisterResource(BaseResource):
         return self.build_resp(resp)
 
 
+@ns.route("/login")
 class LoginResource(BaseResource):
-    """ Login API """
+    """Login API"""
 
+    post_parser = reqparse.RequestParser()
+    post_parser.add_argument("username", location="json")
+    post_parser.add_argument("password", location="json")
+
+    @ns.expect(post_parser)
     def post(self):
-        """ Login user """
+        """Login user"""
         parser = reqparse.RequestParser()
         parser.add_argument("username")
         parser.add_argument("password")
