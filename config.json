@@ -2,5 +2,6 @@
     "SQLALCHEMY_DATABASE_URI": "postgresql://cms:cms@0.0.0.0/cms",
     "SQLALCHEMY_TRACK_MODIFICATIONS": false,
     "USER_MIGRATION": false,
-    "SECRET_KEY": "OtgJ+It4eR34kpzou9RvqlFCm2hZbkMC"
+    "SECRET_KEY": "OtgJ+It4eR34kpzou9RvqlFCm2hZbkMC",
+    "JWT_MINUTE_TIME": 30
 }
