@@ -4,3 +4,4 @@ Flask-SQLAlchemy==2.5.1
 psycopg2-binary==2.9.3
 PyJWT==2.3.0
 bcrypt==3.2.2
+black==22.3.0
