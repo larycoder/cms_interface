@@ -9,6 +9,19 @@ from . import BaseResource
 ns = Namespace(name="auth")
 
 
+@ns.route("/health")
+class HealthResource(BaseResource):
+    """Validate token base request"""
+
+    def get(self):
+        ret = self.is_valid_token()
+        if isinstance(ret, tuple):
+            return ret
+
+        resp = Response(200, "Token is good")
+        return self.build_resp(resp)
+
+
 @ns.route("/register")
 class RegisterResource(BaseResource):
     """Registration API"""
