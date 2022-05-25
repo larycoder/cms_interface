@@ -1,4 +1,4 @@
-# CMS Interface
+# CMS Project
 
 Designing and developing a backend system to interact with Center for Medicare
 and Medicaid Services (CMS) using the Blue Button 2.0 API.
