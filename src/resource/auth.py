@@ -1,5 +1,9 @@
+from urllib.parse import quote
+
+from flask import redirect
 from flask_restx import Namespace, reqparse
 
+from model.app import App
 from model.auth import AuthModel
 from model.response import Response
 import u_util
@@ -78,3 +82,23 @@ class LoginResource(BaseResource):
             code = 403
 
         return self.build_resp(Response(code, msg, resp))
+
+
+@ns.route("/blue-button")
+class BlueButtonResource(BaseResource):
+    """Request token from blue-button"""
+
+    #@u_util.check_auth
+    def get(self):
+        app = App.get_instance()
+        bluebutton_auth_url = app.config["BLUEBUTTON_AUTH_URL"]
+
+        req_param = {
+            "response_type": "code",
+            "client_id": quote(app.config["CLIENT_ID"]),
+            "redirect_uri": quote(app.config["REDIRECT_URI"])
+        }
+        req_param_str = "&".join([f"{k}={v}" for k, v in req_param.items()]);
+
+        req_str = f"{bluebutton_auth_url}/?{req_param_str}"
+        return redirect(req_str)
