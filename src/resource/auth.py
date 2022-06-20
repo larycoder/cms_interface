@@ -13,11 +13,8 @@ ns = Namespace(name="auth")
 class HealthResource(BaseResource):
     """Validate token base request"""
 
+    @u_util.check_auth
     def get(self):
-        ret = self.is_valid_token()
-        if isinstance(ret, tuple):
-            return ret
-
         resp = Response(200, "Token is good")
         return self.build_resp(resp)
 

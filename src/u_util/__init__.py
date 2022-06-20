@@ -66,3 +66,46 @@ def is_correct_pwd(pwd: str, hashed: str) -> bool:
 
     hash_value = b64_to_byte(hashed)
     return bcrypt.checkpw(pwd.encode(), hash_value)
+
+
+def is_valid_token():
+    from model.response import Response
+    from model.app import App
+    from flask import request
+
+    def not_auth():
+        resp = Response(401, "Unauthorized")
+        return (resp.to_dict(), resp.code)
+
+    if request is None:
+        return not_auth()
+    else:
+        auth = request.headers.get("Authorization")
+        if not auth:
+            return not_auth()
+        elif not isinstance(auth, str):
+            return not_auth()
+        elif not auth.lower().startswith("bearer"):
+            return not_auth()
+        else:
+            token = auth.split()[1]
+            key = App.get_instance().config["CURRENT_KEY"]
+            sub = decode_jwt_token(token, key)
+            print(sub)
+            if sub["code"] == 401:
+                return not_auth()
+            else:
+                return None
+
+
+def check_auth(func):
+    """decorator function to validate request permission"""
+
+    def wrapper(*args, **kwargs):
+        ret = is_valid_token()
+        if isinstance(ret, tuple):
+            return ret
+        else:
+            return func(*args, **kwargs)
+
+    return wrapper
