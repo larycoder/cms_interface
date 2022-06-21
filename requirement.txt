@@ -5,3 +5,4 @@ psycopg2-binary==2.9.3
 PyJWT==2.3.0
 bcrypt==3.2.2
 black==22.3.0
+requests==2.28.0
