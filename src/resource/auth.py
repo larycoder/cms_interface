@@ -1,7 +1,9 @@
+import json
 from urllib.parse import quote
 
 from flask import redirect, request
 from flask_restx import Namespace, reqparse
+import requests
 
 from model.app import App
 from model.auth import AuthModel
@@ -112,6 +114,12 @@ class BlueButtonResource(BaseResource):
 class BlueButtonCallbackResource(BaseResource):
     """Retrieve blue button access code"""
 
+    def parse_bb_auth_content(self, resp):
+        if resp.status_code != 200:
+            return None
+        else:
+            return json.loads(resp.content.decode())
+
     @u_util.check_auth
     def get(self):
         payload = u_util.get_payload_from_req_tok()
@@ -129,10 +137,30 @@ class BlueButtonCallbackResource(BaseResource):
 
         bb_code = request.args.get("code")
         if bb_code is not None:
-            user.bb_code = bb_code
-            self.db.session.commit()
-            return self.build_resp(
-                Response(200, "successfully update blue button code")
-            )
+            tok_url = App.get_instance().config["BLUEBUTTON_TOKEN_URL"]
+            tok_client_id = App.get_instance().config["CLIENT_ID"]
+            tok_client_secret = App.get_instance().config["CLIENT_SECRET"]
+            tok_callback = App.get_instance().config["REDIRECT_URI"]
+            tok_data = {
+                "grant_type": "authorization_code",
+                "code": bb_code,
+                "redirect_uri": tok_callback,
+                "client_id": tok_client_id,
+                "client_secret": tok_client_secret,
+            }
+            resp = requests.post(tok_url, tok_data)
+            data = self.parse_bb_auth_content(resp)
+            if data is None:
+                return self.build_resp(
+                    Response(resp.status_code, "", resp.content.decode())
+                )
+            else:
+                user.access_token = data["access_token"]
+                user.refresh_token = data["refresh_token"]
+                self.db.session.commit()
+
+                return self.build_resp(
+                    Response(200, "successfully update blue button code", data)
+                )
         else:
             return self.build_resp(Response(404, "callback fail"))
