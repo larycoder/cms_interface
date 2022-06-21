@@ -81,6 +81,9 @@ def is_valid_token():
         return not_auth()
     else:
         auth = request.headers.get("Authorization")
+        if auth is None:
+            auth = request.cookies.get("Authorization")
+
         if not auth:
             return not_auth()
         elif not isinstance(auth, str):
@@ -91,7 +94,6 @@ def is_valid_token():
             token = auth.split()[1]
             key = App.get_instance().config["CURRENT_KEY"]
             sub = decode_jwt_token(token, key)
-            print(sub)
             if sub["code"] == 401:
                 return not_auth()
             else:
@@ -109,3 +111,20 @@ def check_auth(func):
             return func(*args, **kwargs)
 
     return wrapper
+
+
+def get_payload_from_req_tok():
+    """collect payload from request token"""
+    from flask import request
+    from model.app import App
+
+    tok = request.headers.get("Authorization")
+    tok = None
+    if tok is None:
+        tok = request.cookies.get("Authorization")
+
+    if tok is None:
+        return None
+    else:
+        tok = tok.split()[1]
+        return decode_jwt_token(tok, App.get_instance().config["CURRENT_KEY"])
