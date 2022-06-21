@@ -1,3 +1,4 @@
+from flask import make_response
 from flask_restx import Resource
 
 from model.app import App
@@ -13,4 +14,4 @@ class BaseResource(Resource):
         self.db = App.get_instance().config["CURRENT_DB"]
 
     def build_resp(self, resp: Response):
-        return (resp.to_dict(), resp.code)
+        return make_response(resp.to_dict(), resp.code)

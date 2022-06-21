@@ -1,6 +1,6 @@
 from urllib.parse import quote
 
-from flask import redirect
+from flask import redirect, request
 from flask_restx import Namespace, reqparse
 
 from model.app import App
@@ -49,7 +49,9 @@ class RegisterResource(BaseResource):
         payload = {"id": user.id}
         token = u_util.encode_jwt_token(payload, self.key)
         resp = Response(200, "new user is created", token)
-        return self.build_resp(resp)
+        resp_with_cookie = self.build_resp(resp)
+        resp_with_cookie.set_cookie("Authorization", "bearer " + token)
+        return resp_with_cookie
 
 
 @ns.route("/login")
@@ -77,18 +79,20 @@ class LoginResource(BaseResource):
             msg = "login successfully"
             code = 200
         else:
-            resp = None
+            resp = ""
             msg = "wrong username or password"
             code = 403
 
-        return self.build_resp(Response(code, msg, resp))
+        resp_with_cookie = self.build_resp(Response(code, msg, resp))
+        resp_with_cookie.set_cookie("Authorization", "bearer " + resp)
+        return resp_with_cookie
 
 
 @ns.route("/blue-button")
 class BlueButtonResource(BaseResource):
     """Request token from blue-button"""
 
-    #@u_util.check_auth
+    @u_util.check_auth
     def get(self):
         app = App.get_instance()
         bluebutton_auth_url = app.config["BLUEBUTTON_AUTH_URL"]
@@ -96,9 +100,39 @@ class BlueButtonResource(BaseResource):
         req_param = {
             "response_type": "code",
             "client_id": quote(app.config["CLIENT_ID"]),
-            "redirect_uri": quote(app.config["REDIRECT_URI"])
+            "redirect_uri": quote(app.config["REDIRECT_URI"]),
         }
-        req_param_str = "&".join([f"{k}={v}" for k, v in req_param.items()]);
+        req_param_str = "&".join([f"{k}={v}" for k, v in req_param.items()])
 
         req_str = f"{bluebutton_auth_url}/?{req_param_str}"
         return redirect(req_str)
+
+
+@ns.route("/callback")
+class BlueButtonCallbackResource(BaseResource):
+    """Retrieve blue button access code"""
+
+    @u_util.check_auth
+    def get(self):
+        payload = u_util.get_payload_from_req_tok()
+        if payload is None:
+            return self.build_resp(Response(401, "missing payload"))
+        elif payload["code"] == 401:
+            resp = Response(payload["code"], "error payload", str(payload["resp"]))
+            return self.build_resp(resp)
+        else:
+            payload = payload["resp"]
+
+        user = AuthModel.query.get(payload["id"])
+        if user is None:
+            return self.build_resp(Response(404, "undefined user"))
+
+        bb_code = request.args.get("code")
+        if bb_code is not None:
+            user.bb_code = bb_code
+            self.db.session.commit()
+            return self.build_resp(
+                Response(200, "successfully update blue button code")
+            )
+        else:
+            return self.build_resp(Response(404, "callback fail"))
