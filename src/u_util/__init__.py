@@ -119,7 +119,6 @@ def get_payload_from_req_tok():
     from model.app import App
 
     tok = request.headers.get("Authorization")
-    tok = None
     if tok is None:
         tok = request.cookies.get("Authorization")
 
