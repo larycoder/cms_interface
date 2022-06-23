@@ -92,7 +92,7 @@ class LoginResource(BaseResource):
 
 @ns.route("/blue-button")
 class BlueButtonResource(BaseResource):
-    """Request token from blue-button"""
+    """Request code from blue-button"""
 
     @u_util.check_auth
     def get(self):
@@ -155,8 +155,8 @@ class BlueButtonCallbackResource(BaseResource):
                     Response(resp.status_code, "", resp.content.decode())
                 )
             else:
-                user.access_token = data["access_token"]
-                user.refresh_token = data["refresh_token"]
+                user.bb_access_token = data["access_token"]
+                user.bb_refresh_token = data["refresh_token"]
                 self.db.session.commit()
 
                 return self.build_resp(
